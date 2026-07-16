@@ -13,11 +13,11 @@ FILE_CATEGORIES = {
         ".docx",
         ".xlsx",
         ".pptx",
-        ".py",
     },
     "Videos": {".mp4", ".mov", ".avi", ".mkv"},
     "Audio": {".mp3", ".wav", ".flac"},
     "Archives": {".zip", ".rar", ".7z", ".tar", ".gz"},
+    "Code": { ".py", ".js", ".html", ".css", ".java", ".cpp", ".c", ".cs", ".json", ".xml"}
 }
 
 
@@ -101,10 +101,9 @@ folder_to_organize = askdirectory(
     title="Select a folder to organize"
 )
 
-if folder_to_organize:
-    organize_folder(folder_to_organize)
-else:
+if not folder_to_organize:
     print("No folder selected.")
+    exit()
 
 folder = Path(folder_to_organize)
 
