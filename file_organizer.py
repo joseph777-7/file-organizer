@@ -1,6 +1,7 @@
 from tkinter import Tk
 from tkinter.filedialog import askdirectory
 from pathlib import Path
+from datetime import datetime
 import shutil
 
 
@@ -54,9 +55,27 @@ def get_unique_destination(destination):
 
         counter += 1
 
+def write_log(folder, log_entries, files_moved):
+    """Append the results of an organization run to a log file."""
+    log_path = folder / "organizer.log"
+    timestamp = datetime.now().strftime("%Y-%m-%d %I:%M:%S %p")
+
+    with log_path.open("a", encoding="utf-8") as log_file:
+        log_file.write("=" * 60 + "\n")
+        log_file.write(f"Organization run: {timestamp}\n")
+        log_file.write("=" * 60 + "\n")
+
+        if log_entries:
+            for entry in log_entries:
+                log_file.write(entry + "\n")
+        else:
+            log_file.write("No files were found to organize.\n")
+
+        log_file.write(f"Total files moved: {files_moved}\n\n")
+
 
 def organize_folder(folder_path):
-    """Create category folders and move files into them."""
+    """Create category folders, move files, and record the results."""
     folder = Path(folder_path).expanduser()
 
     if not folder.exists():
@@ -70,9 +89,14 @@ def organize_folder(folder_path):
     print(f"\nOrganizing: {folder.resolve()}\n")
 
     files_moved = 0
+    log_entries = []
 
     for item in folder.iterdir():
         if not item.is_file():
+            continue
+
+        # Prevent the program from organizing its own log file.
+        if item.name == "organizer.log":
             continue
 
         category = get_category(item)
@@ -83,15 +107,32 @@ def organize_folder(folder_path):
         destination = category_folder / item.name
         destination = get_unique_destination(destination)
 
-        shutil.move(str(item), str(destination))
+        original_name = item.name
 
-        print(f"Moved: {item.name} --> {category}/{destination.name}")
-        files_moved += 1
+        try:
+            shutil.move(str(item), str(destination))
+
+            message = (
+                f"Moved: {original_name} --> "
+                f"{category}/{destination.name}"
+            )
+
+            print(message)
+            log_entries.append(message)
+            files_moved += 1
+
+        except OSError as error:
+            message = f"Error moving {original_name}: {error}"
+            print(message)
+            log_entries.append(message)
+
+    write_log(folder, log_entries, files_moved)
 
     if files_moved == 0:
         print("No files were found to organize.")
     else:
         print(f"\nFinished. Moved {files_moved} file(s).")
+        print(f"Log saved to: {folder / 'organizer.log'}")
 
 
 root = Tk()
