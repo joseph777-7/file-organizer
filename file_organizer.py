@@ -3,23 +3,18 @@ from tkinter.filedialog import askdirectory
 from pathlib import Path
 from datetime import datetime
 import shutil
+import json
 
 
-FILE_CATEGORIES = {
-    "Images": {".jpg", ".jpeg", ".png", ".gif", ".webp"},
-    "Documents": {
-        ".pdf",
-        ".txt",
-        ".doc",
-        ".docx",
-        ".xlsx",
-        ".pptx",
-    },
-    "Videos": {".mp4", ".mov", ".avi", ".mkv"},
-    "Audio": {".mp3", ".wav", ".flac"},
-    "Archives": {".zip", ".rar", ".7z", ".tar", ".gz"},
-    "Code": { ".py", ".js", ".html", ".css", ".java", ".cpp", ".c", ".cs", ".json", ".xml"}
-}
+def load_categories():
+    """Load categories from config.json."""
+    config_path = Path(__file__).parent / "config.json"
+
+    with open(config_path, "r", encoding="utf-8") as file:
+        return json.load(file)
+
+
+FILE_CATEGORIES = load_categories()
 
 
 def get_category(file_path):
