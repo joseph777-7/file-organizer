@@ -68,8 +68,34 @@ def write_log(folder, log_entries, files_moved):
 
         log_file.write(f"Total files moved: {files_moved}\n\n")
 
+def create_move_plan(folder):
+    """Return a list describing where each file will be moved."""
+    move_plan = []
 
-def organize_folder(folder_path):
+    for item in folder.iterdir():
+        if not item.is_file():
+            continue
+
+        if item.name == "organizer.log":
+            continue
+
+        category = get_category(item)
+        category_folder = folder / category
+
+        destination = category_folder / item.name
+        destination = get_unique_destination(destination)
+
+        move_plan.append(
+            {
+                "source": item,
+                "category": category,
+                "destination": destination,
+            }
+        )
+
+    return move_plan
+
+def organize_folder(folder_path, move_plan):
     """Create category folders, move files, and record the results."""
     folder = Path(folder_path).expanduser()
 
@@ -87,21 +113,13 @@ def organize_folder(folder_path):
     category_counts = {}
     log_entries = []
 
-    for item in folder.iterdir():
-        if not item.is_file():
-            continue
+    for move in move_plan:
+        item = move["source"]
+        category = move["category"]
+        destination = move["destination"]
 
-        # Prevent the program from organizing its own log file.
-        if item.name == "organizer.log":
-            continue
-
-        category = get_category(item)
         category_folder = folder / category
-
         category_folder.mkdir(exist_ok=True)
-
-        destination = category_folder / item.name
-        destination = get_unique_destination(destination)
 
         original_name = item.name
 
@@ -116,7 +134,10 @@ def organize_folder(folder_path):
             print(message)
             log_entries.append(message)
             files_moved += 1
-            category_counts[category] = category_counts.get(category, 0) + 1
+
+            category_counts[category] = (
+                category_counts.get(category, 0) + 1
+            )
 
         except OSError as error:
             message = f"Error moving {original_name}: {error}"
@@ -126,17 +147,17 @@ def organize_folder(folder_path):
     write_log(folder, log_entries, files_moved)
 
     if files_moved == 0:
-        print("No files were found to organize.")
+        print("No files were moved.")
     else:
         print("\n" + "=" * 40)
-    print("Organization complete")
-    print("=" * 40)
+        print("Organization complete")
+        print("=" * 40)
 
-    for category, count in sorted(category_counts.items()):
-        print(f"{category}: {count}")
+        for category, count in sorted(category_counts.items()):
+            print(f"{category}: {count}")
 
-    print(f"\nTotal files moved: {files_moved}")
-    print(f"Log saved to: {folder / 'organizer.log'}")
+        print(f"\nTotal files moved: {files_moved}")
+        print(f"Log saved to: {folder / 'organizer.log'}")
 
 
 root = Tk()
@@ -159,25 +180,36 @@ elif not folder.is_dir():
     print("The path must point to a folder.")
 
 else:
-    print("\nFiles that will be organized:\n")
+    move_plan = create_move_plan(folder)
 
-    files_found = False
-
-    for item in folder.iterdir():
-        if item.is_file():
-            files_found = True
-            category = get_category(item)
-            print(f"{item.name} --> {category}/")
-
-    if not files_found:
-        print("No files were found.")
+    if not move_plan:
+        print("No files were found to organize.")
 
     else:
+        print("\n" + "=" * 40)
+        print("DRY RUN - FILES WILL NOT BE MOVED YET")
+        print("=" * 40)
+
+        for move in move_plan:
+            source = move["source"]
+            category = move["category"]
+            destination = move["destination"]
+
+            print(
+                f"{source.name} --> "
+                f"{category}/{destination.name}"
+            )
+
+        print(f"\n{len(move_plan)} file(s) would be moved.")
+
         answer = input(
             "\nDo you want to move these files? (yes/no): "
         ).strip().lower()
 
         if answer in {"yes", "y"}:
-            organize_folder(folder)
+            organize_folder(folder, move_plan)
         else:
-            print("Organization cancelled.")
+            print(
+                "Organization cancelled. "
+                "No files were moved."
+            )
