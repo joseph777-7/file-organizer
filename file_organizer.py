@@ -84,6 +84,7 @@ def organize_folder(folder_path):
     print(f"\nOrganizing: {folder.resolve()}\n")
 
     files_moved = 0
+    category_counts = {}
     log_entries = []
 
     for item in folder.iterdir():
@@ -115,6 +116,7 @@ def organize_folder(folder_path):
             print(message)
             log_entries.append(message)
             files_moved += 1
+            category_counts[category] = category_counts.get(category, 0) + 1
 
         except OSError as error:
             message = f"Error moving {original_name}: {error}"
@@ -126,8 +128,15 @@ def organize_folder(folder_path):
     if files_moved == 0:
         print("No files were found to organize.")
     else:
-        print(f"\nFinished. Moved {files_moved} file(s).")
-        print(f"Log saved to: {folder / 'organizer.log'}")
+        print("\n" + "=" * 40)
+    print("Organization complete")
+    print("=" * 40)
+
+    for category, count in sorted(category_counts.items()):
+        print(f"{category}: {count}")
+
+    print(f"\nTotal files moved: {files_moved}")
+    print(f"Log saved to: {folder / 'organizer.log'}")
 
 
 root = Tk()
