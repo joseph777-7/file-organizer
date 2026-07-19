@@ -1,13 +1,12 @@
 from tkinter import Tk
 from tkinter.filedialog import askdirectory
 from pathlib import Path
-from datetime import datetime
 
 from config import FILE_CATEGORIES
+from logger import write_log
 
 import shutil
 import time
-
 
 
 def get_category(file_path):
@@ -43,23 +42,6 @@ def get_unique_destination(destination):
 
         counter += 1
 
-def write_log(folder, log_entries, files_moved):
-    """Append the results of an organization run to a log file."""
-    log_path = folder / "organizer.log"
-    timestamp = datetime.now().strftime("%Y-%m-%d %I:%M:%S %p")
-
-    with log_path.open("a", encoding="utf-8") as log_file:
-        log_file.write("=" * 60 + "\n")
-        log_file.write(f"Organization run: {timestamp}\n")
-        log_file.write("=" * 60 + "\n")
-
-        if log_entries:
-            for entry in log_entries:
-                log_file.write(entry + "\n")
-        else:
-            log_file.write("No files were found to organize.\n")
-
-        log_file.write(f"Total files moved: {files_moved}\n\n")
 
 def create_move_plan(folder):
     """Return a list describing where each file will be moved."""
