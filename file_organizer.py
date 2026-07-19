@@ -4,6 +4,7 @@ from pathlib import Path
 from datetime import datetime
 import shutil
 import json
+import time
 
 
 def load_categories():
@@ -97,6 +98,8 @@ def create_move_plan(folder):
 
 def organize_folder(folder_path, move_plan):
     """Create category folders, move files, and record the results."""
+    start_time = time.perf_counter()
+
     folder = Path(folder_path).expanduser()
 
     if not folder.exists():
@@ -146,6 +149,8 @@ def organize_folder(folder_path, move_plan):
 
     write_log(folder, log_entries, files_moved)
 
+    elapsed_time = time.perf_counter() - start_time
+
     if files_moved == 0:
         print("No files were moved.")
     else:
@@ -157,6 +162,7 @@ def organize_folder(folder_path, move_plan):
             print(f"{category}: {count}")
 
         print(f"\nTotal files moved: {files_moved}")
+        print(f"Time taken: {elapsed_time:.2f} seconds")
         print(f"Log saved to: {folder / 'organizer.log'}")
 
 
