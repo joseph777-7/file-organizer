@@ -5,6 +5,18 @@ import time
 from config import FILE_CATEGORIES
 from logger import write_log
 
+IGNORED_FOLDERS = {
+    ".git",
+    ".idea",
+    ".vscode",
+    "__pycache__",
+    "venv",
+    ".venv",
+    "node_modules",
+}
+
+
+
 def get_category(file_path):
     """Return the category matching the file extension."""
     extension = file_path.suffix.lower()
@@ -52,8 +64,12 @@ def create_move_plan(folder):
             continue
 
         relative_parts = item.relative_to(folder).parts
+        parent_parts = relative_parts[:-1]
 
-        if any(part in category_names for part in relative_parts[:-1]):
+        if any(part in IGNORED_FOLDERS for part in parent_parts):
+            continue
+
+        if any(part in category_names for part in parent_parts):
             continue
 
         category = get_category(item)
