@@ -41,11 +41,19 @@ def create_move_plan(folder):
     """Return a list describing where each file will be moved."""
     move_plan = []
 
-    for item in folder.iterdir():
+    category_names = set(FILE_CATEGORIES)
+    category_names.add("Other")
+
+    for item in folder.rglob("*"):
         if not item.is_file():
             continue
 
         if item.name == "organizer.log":
+            continue
+
+        relative_parts = item.relative_to(folder).parts
+
+        if any(part in category_names for part in relative_parts[:-1]):
             continue
 
         category = get_category(item)
