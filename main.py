@@ -51,7 +51,22 @@ else:
         ).strip().lower()
 
         if answer in {"yes", "y"}:
-            organize_folder(folder, move_plan)
+            cleanup_answer = input(
+                "Remove empty folders afterward? "
+                "(yes/no): "
+            ).strip().lower()
+
+            remove_empty = cleanup_answer in {
+                "yes",
+                "y",
+            }
+
+            organize_folder(
+                folder,
+                move_plan,
+                remove_empty,
+            )
+
         else:
             print(
                 "Organization cancelled. "

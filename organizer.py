@@ -88,7 +88,33 @@ def create_move_plan(folder):
 
     return move_plan
 
-def organize_folder(folder_path, move_plan):
+def remove_empty_folders(folder):
+    """Remove empty folders inside the selected folder."""
+    removed_folders = []
+
+    folders = sorted(
+        (
+            path
+            for path in folder.rglob("*")
+            if path.is_dir()
+        ),
+        key=lambda path: len(path.parts),
+        reverse=True,
+    )
+
+    for current_folder in folders:
+        try:
+            current_folder.rmdir()
+            removed_folders.append(current_folder)
+
+        except OSError:
+            # The folder is not empty or cannot be removed.
+            continue
+
+    return removed_folders
+
+
+def organize_folder(folder_path, move_plan, remove_empty=False, ):
     """Create category folders, move files, and record the results."""
     start_time = time.perf_counter()
 
@@ -140,6 +166,11 @@ def organize_folder(folder_path, move_plan):
             log_entries.append(message)
 
     write_log(folder, log_entries, files_moved)
+    
+    removed_folders = []
+
+    if remove_empty:
+        removed_folders = remove_empty_folders(folder)
 
     elapsed_time = time.perf_counter() - start_time
 
@@ -154,5 +185,11 @@ def organize_folder(folder_path, move_plan):
             print(f"{category}: {count}")
 
         print(f"\nTotal files moved: {files_moved}")
+
+        if remove_empty:
+            print(
+        f"Empty folders removed: "
+        f"{len(removed_folders)}"
+    )
         print(f"Time taken: {elapsed_time:.2f} seconds")
         print(f"Log saved to: {folder / 'organizer.log'}")
