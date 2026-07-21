@@ -3,7 +3,8 @@ import shutil
 import time
 
 from config import FILE_CATEGORIES
-from logger import write_log
+from logger import save_undo_data, write_log
+
 
 IGNORED_FOLDERS = {
     ".git",
@@ -60,8 +61,11 @@ def create_move_plan(folder):
         if not item.is_file():
             continue
 
-        if item.name == "organizer.log":
-            continue
+        if item.name in {
+            "organizer.log",
+            ".organizer_undo.json",
+}:
+             continue
 
         relative_parts = item.relative_to(folder).parts
         parent_parts = relative_parts[:-1]
@@ -133,6 +137,7 @@ def organize_folder(folder_path, move_plan, remove_empty=False, ):
     files_moved = 0
     category_counts = {}
     log_entries = []
+    undo_entries = []
 
     for move in move_plan:
         item = move["source"]
@@ -146,6 +151,13 @@ def organize_folder(folder_path, move_plan, remove_empty=False, ):
 
         try:
             shutil.move(str(item), str(destination))
+
+            undo_entries.append(
+    {
+        "original": str(item),
+        "destination": str(destination),
+    }
+)
 
             message = (
                 f"Moved: {original_name} --> "
@@ -166,6 +178,9 @@ def organize_folder(folder_path, move_plan, remove_empty=False, ):
             log_entries.append(message)
 
     write_log(folder, log_entries, files_moved)
+
+    if undo_entries:
+        save_undo_data(folder, undo_entries)
     
     removed_folders = []
 

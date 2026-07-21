@@ -1,4 +1,20 @@
 from datetime import datetime
+import json
+
+def save_undo_data(folder, undo_entries):
+    """Save information needed to undo the latest organization run."""
+    undo_path = folder / ".organizer_undo.json"
+
+    undo_data = {
+        "moves": undo_entries,
+    }
+
+    with undo_path.open("w", encoding="utf-8") as undo_file:
+        json.dump(
+            undo_data,
+            undo_file,
+            indent=4,
+        )
 
 
 def write_log(folder, log_entries, files_moved):
