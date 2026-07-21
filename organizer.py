@@ -118,6 +118,32 @@ def remove_empty_folders(folder):
 
     return removed_folders
 
+def remove_empty_category_folders(folder):
+    """Remove empty category folders created by the organizer."""
+    category_names = set(FILE_CATEGORIES)
+    category_names.add("Other")
+
+    folders_removed = 0
+
+    for category in category_names:
+        category_folder = folder / category
+
+        if not category_folder.exists():
+            continue
+
+        if not category_folder.is_dir():
+            continue
+
+        try:
+            category_folder.rmdir()
+            folders_removed += 1
+
+        except OSError:
+            # The folder still contains files or subfolders.
+            continue
+
+    return folders_removed
+
 def undo_last_organization(folder_path):
     """Restore files moved during the latest organization run."""
     folder = Path(folder_path).expanduser()
@@ -188,6 +214,15 @@ def undo_last_organization(folder_path):
     print("Undo complete")
     print("=" * 40)
     print(f"Files restored: {files_restored}")
+
+    category_folders_removed = remove_empty_category_folders(
+    folder
+)
+
+    print(
+    f"Empty category folders removed: "
+    f"{category_folders_removed}"
+)
 
     if errors:
         print(f"Files not restored: {len(errors)}")
