@@ -1,6 +1,7 @@
 from pathlib import Path
 import shutil
 import time
+import json
 
 from config import FILE_CATEGORIES
 from logger import save_undo_data, write_log
@@ -117,6 +118,93 @@ def remove_empty_folders(folder):
 
     return removed_folders
 
+def undo_last_organization(folder_path):
+    """Restore files moved during the latest organization run."""
+    folder = Path(folder_path).expanduser()
+    undo_path = folder / ".organizer_undo.json"
+
+    if not undo_path.exists():
+        print("No undo information was found.")
+        return
+
+    try:
+        with undo_path.open("r", encoding="utf-8") as undo_file:
+            undo_data = json.load(undo_file)
+
+    except (OSError, json.JSONDecodeError) as error:
+        print(f"Could not read the undo file: {error}")
+        return
+
+    moves = undo_data.get("moves", [])
+
+    if not moves:
+        print("There are no file moves to undo.")
+        return
+
+    files_restored = 0
+    errors = []
+
+    for move in reversed(moves):
+        original = Path(move["original"])
+        destination = Path(move["destination"])
+
+        if not destination.exists():
+            errors.append(
+                f"Missing file: {destination}"
+            )
+            continue
+
+        original.parent.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+
+        if original.exists():
+            errors.append(
+                f"Cannot restore because the original path "
+                f"already exists: {original}"
+            )
+            continue
+
+        try:
+            shutil.move(
+                str(destination),
+                str(original),
+            )
+
+            print(
+                f"Restored: {destination.name} --> "
+                f"{original}"
+            )
+
+            files_restored += 1
+
+        except OSError as error:
+            errors.append(
+                f"Error restoring {destination}: {error}"
+            )
+
+    print("\n" + "=" * 40)
+    print("Undo complete")
+    print("=" * 40)
+    print(f"Files restored: {files_restored}")
+
+    if errors:
+        print(f"Files not restored: {len(errors)}")
+
+        for error in errors:
+            print(f"- {error}")
+
+    if files_restored == len(moves):
+        try:
+            undo_path.unlink()
+            print("Undo information cleared.")
+
+        except OSError as error:
+            print(
+                f"Files were restored, but the undo file "
+                f"could not be removed: {error}"
+            )
 
 def organize_folder(folder_path, move_plan, remove_empty=False, ):
     """Create category folders, move files, and record the results."""

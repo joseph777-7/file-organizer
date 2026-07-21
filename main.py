@@ -1,7 +1,7 @@
 from tkinter import Tk
 from tkinter.filedialog import askdirectory
 from pathlib import Path
-from organizer import create_move_plan, organize_folder
+from organizer import (create_move_plan, organize_folder, undo_last_organization,)
 
 
 root = Tk()
@@ -11,11 +11,15 @@ folder_to_organize = askdirectory(
     title="Select a folder to organize"
 )
 
-if not folder_to_organize:
-    print("No folder selected.")
-    exit()
-
 folder = Path(folder_to_organize)
+
+print("\nChoose an action:")
+print("1. Organize files")
+print("2. Undo last organization")
+
+action = input(
+    "\nEnter 1 or 2: "
+).strip()
 
 if not folder.exists():
     print("That folder does not exist.")
@@ -23,7 +27,19 @@ if not folder.exists():
 elif not folder.is_dir():
     print("The path must point to a folder.")
 
-else:
+
+elif action == "2":
+    confirmation = input(
+        "\nUndo the last organization? "
+        "(yes/no): "
+    ).strip().lower()
+
+    if confirmation in {"yes", "y"}:
+        undo_last_organization(folder)
+    else:
+        print("Undo cancelled.")
+
+elif action == "1":
     move_plan = create_move_plan(folder)
 
     if not move_plan:
@@ -40,14 +56,18 @@ else:
             destination = move["destination"]
 
             print(
-                f"{source.name} --> "
+                f"{source} --> "
                 f"{category}/{destination.name}"
             )
 
-        print(f"\n{len(move_plan)} file(s) would be moved.")
+        print(
+            f"\n{len(move_plan)} file(s) "
+            "would be moved."
+        )
 
         answer = input(
-            "\nDo you want to move these files? (yes/no): "
+            "\nDo you want to move these files? "
+            "(yes/no): "
         ).strip().lower()
 
         if answer in {"yes", "y"}:
@@ -72,3 +92,6 @@ else:
                 "Organization cancelled. "
                 "No files were moved."
             )
+
+else:
+    print("Invalid choice. Please enter 1 or 2.")
