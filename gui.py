@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import messagebox
+from pathlib import Path
 
 from organizer import (
     create_move_plan,
@@ -20,7 +21,7 @@ def browse_folder():
 
 def organize_selected_folder():
     """Create a move plan and organize the selected folder."""
-    folder = folder_path.get().strip()
+    folder = Path(folder_path.get().strip())
 
     if not folder:
         messagebox.showwarning(
@@ -66,7 +67,7 @@ def organize_selected_folder():
 
 def undo_selected_folder():
     """Undo the last organization for the selected folder."""
-    folder = folder_path.get().strip()
+    folder = Path(folder_path.get().strip())
 
     if not folder:
         messagebox.showwarning(
