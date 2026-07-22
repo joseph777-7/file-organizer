@@ -5,8 +5,7 @@ def save_undo_data(folder, undo_entries):
     """Save information needed to undo the latest organization run."""
     undo_path = folder / ".organizer_undo.json"
 
-    undo_data = {
-        "moves": undo_entries,
+    undo_data = {"moves": undo_entries,
     }
 
     with undo_path.open("w", encoding="utf-8") as undo_file:
