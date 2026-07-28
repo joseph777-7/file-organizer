@@ -11,6 +11,7 @@ from organizer import (
     undo_last_organization,
 )
 
+print("Running:", __file__)
 
 def browse_folder():
     """Let the user select a folder."""
@@ -43,27 +44,56 @@ def organize_selected_folder():
         )
         return
 
-
+    status_label.config(fg="blue")
     status_text.set("Organizing files...")
+
+    preview_button.config(state="disabled")
+    organize_button.config(state="disabled")
+    undo_button.config(state="disabled")
+    browse_button.config(state="disabled")
+
+    progress_bar.start(10)
     window.update_idletasks()
 
-    organize_folder(
-        folder,
-        current_move_plan,
-        remove_empty=remove_empty_var.get(),
-    )
+    try:
+        organize_folder(
+            folder,
+            current_move_plan,
+            remove_empty=remove_empty_var.get(),
+        )
 
-    current_move_plan = []
+        current_move_plan = []
 
-    for row in preview_table.get_children():
-        preview_table.delete(row)
+        for row in preview_table.get_children():
+            preview_table.delete(row)
 
-    status_text.set("Organization complete.")
+        status_label.config(fg="#0066cc")
+        status_text.set(f"{len(current_move_plan)} file(s) ready to organize."
+)
 
-    messagebox.showinfo(
-        "Complete",
-        "The files were organized successfully.",
-    )
+
+        messagebox.showinfo(
+            "Complete",
+            "The files were organized successfully.",
+        )
+
+    except Exception as error:
+        status_label.config(fg="red")
+        status_text.set("Organization failed.")
+
+        messagebox.showerror(
+            "Organization error",
+            f"Could not organize the files:\n\n{error}",
+        )
+
+    finally:
+        progress_bar.stop()
+
+        preview_button.config(state="normal")
+        organize_button.config(state="normal")
+        undo_button.config(state="normal")
+        browse_button.config(state="normal")
+
 
 
 def undo_selected_folder():
@@ -140,13 +170,14 @@ def preview_selected_folder():
             ),
         )
 
+    status_label.config(fg="black")
     status_text.set(
         f"{len(current_move_plan)} file(s) ready to organize."
-    )
+)
 
 window = tk.Tk()
 window.title("File Organizer")
-window.geometry("850x500")
+window.geometry("850x600")
 window.minsize(700, 400)
 
 folder_path = tk.StringVar()
@@ -198,6 +229,29 @@ remove_empty_checkbox.pack(pady=15)
 button_frame = tk.Frame(window)
 button_frame.pack()
 
+progress_bar = ttk.Progressbar(
+    window,
+    mode="indeterminate",
+)
+
+progress_bar.pack(
+    fill="x",
+    padx=20,
+    pady=(15, 0),
+)
+
+status_label = tk.Label(
+    window,
+    textvariable=status_text,
+    anchor="w",
+    fg="black",
+)
+
+status_label.pack(
+    fill="x",
+    padx=20,
+    pady=(10,5),
+)
 preview_button = tk.Button(
     button_frame,
     text="Preview Files",
@@ -294,17 +348,6 @@ preview_table.pack(
 preview_scrollbar.pack(
     side="right",
     fill="y",
-)
-
-status_label = tk.Label(
-    window,
-    textvariable=status_text,
-    anchor="w",
-)
-status_label.pack(
-    fill="x",
-    padx=20,
-    pady=20,
 )
 
 window.mainloop()
